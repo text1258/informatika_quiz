@@ -298,9 +298,209 @@
     font-weight: 600;
     margin-bottom: 16px;
   }
+
+  /* BURGER BUTTON */
+  .burger-btn {
+    position: fixed;
+    top: 14px;
+    right: 16px;
+    z-index: 1000;
+    background: var(--card);
+    border: 1.5px solid var(--border);
+    border-radius: 10px;
+    width: 42px;
+    height: 42px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    gap: 5px;
+    cursor: pointer;
+    transition: background .15s, border-color .15s;
+    padding: 0;
+  }
+  .burger-btn:hover { background: var(--surface); border-color: var(--accent); }
+  .burger-btn span {
+    display: block;
+    width: 18px;
+    height: 2px;
+    background: var(--text);
+    border-radius: 2px;
+    transition: background .15s;
+  }
+  .burger-btn:hover span { background: var(--accent); }
+
+  /* MENU DRAWER */
+  .menu-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,.55);
+    z-index: 1100;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity .25s;
+  }
+  .menu-overlay.open { opacity: 1; pointer-events: all; }
+
+  .menu-drawer {
+    position: fixed;
+    top: 0;
+    right: -340px;
+    width: min(320px, 90vw);
+    height: 100%;
+    background: var(--surface);
+    border-left: 1px solid var(--border);
+    z-index: 1200;
+    display: flex;
+    flex-direction: column;
+    transition: right .28s cubic-bezier(.4,0,.2,1);
+    overflow: hidden;
+  }
+  .menu-drawer.open { right: 0; }
+
+  .menu-header {
+    padding: 18px 16px 14px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-shrink: 0;
+  }
+  .menu-header h3 {
+    font-size: .95rem;
+    font-weight: 700;
+    color: var(--text);
+  }
+  .menu-close {
+    background: none;
+    border: none;
+    color: var(--muted);
+    font-size: 1.4rem;
+    cursor: pointer;
+    line-height: 1;
+    padding: 4px 6px;
+    border-radius: 6px;
+    transition: color .15s, background .15s;
+  }
+  .menu-close:hover { color: var(--text); background: var(--card); }
+
+  .menu-list {
+    overflow-y: auto;
+    flex: 1;
+    padding: 10px 0;
+  }
+  .menu-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    padding: 10px 16px;
+    cursor: pointer;
+    transition: background .12s;
+    border: none;
+    background: none;
+    width: 100%;
+    text-align: left;
+    color: var(--text);
+    font-family: 'Inter', sans-serif;
+  }
+  .menu-item:hover { background: var(--card); }
+  .menu-item-num {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: .7rem;
+    font-weight: 700;
+    color: var(--accent);
+    min-width: 26px;
+    padding-top: 2px;
+  }
+  .menu-item-text {
+    font-size: .82rem;
+    line-height: 1.45;
+    color: var(--muted);
+  }
+  .menu-item:hover .menu-item-text { color: var(--text); }
+
+  /* SINGLE QUESTION FULLSCREEN */
+  .solo-screen {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: var(--bg);
+    z-index: 900;
+    overflow-y: auto;
+    animation: slideUp .22s ease;
+  }
+  .solo-screen.active { display: block; }
+
+  .solo-topbar {
+    position: sticky;
+    top: 0;
+    background: var(--bg);
+    border-bottom: 1px solid var(--border);
+    padding: 12px 16px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    z-index: 10;
+  }
+  .solo-back {
+    background: none;
+    border: 1.5px solid var(--border);
+    border-radius: 8px;
+    color: var(--text);
+    width: 36px;
+    height: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    font-size: 1rem;
+    transition: border-color .15s, background .15s;
+    flex-shrink: 0;
+  }
+  .solo-back:hover { border-color: var(--accent); background: rgba(91,142,240,.1); color: var(--accent); }
+
+  .solo-topbar-title {
+    font-size: .85rem;
+    color: var(--muted);
+    font-weight: 500;
+    flex: 1;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .solo-content {
+    max-width: 780px;
+    margin: 0 auto;
+    padding: 24px 16px 60px;
+  }
 </style>
 </head>
 <body>
+<!-- Burger button (always visible) -->
+<button class="burger-btn" onclick="openMenu()" aria-label="Меню вопросов">
+  <span></span><span></span><span></span>
+</button>
+
+<!-- Menu overlay + drawer -->
+<div class="menu-overlay" id="menu-overlay" onclick="closeMenu()"></div>
+<div class="menu-drawer" id="menu-drawer">
+  <div class="menu-header">
+    <h3>Все вопросы</h3>
+    <button class="menu-close" onclick="closeMenu()">✕</button>
+  </div>
+  <div class="menu-list" id="menu-list"></div>
+</div>
+
+<!-- Solo (full-screen single question) screen -->
+<div class="solo-screen" id="solo-screen">
+  <div class="solo-topbar">
+    <button class="solo-back" id="solo-back-btn" onclick="closeSolo()" aria-label="Назад">&#8592;</button>
+    <div class="solo-topbar-title" id="solo-topbar-title">Вопрос</div>
+  </div>
+  <div class="solo-content" id="solo-content"></div>
+</div>
+
 <div id="app">
   <div class="header">
     <h1>Информатика — Тест. Часть 2</h1>
@@ -1176,6 +1376,238 @@ function showFinish() {
       <button class="btn-restart" onclick="startQuiz()">Пройти снова</button>
     </div>
   `;
+}
+
+// ─── BURGER MENU ───────────────────────────────────────────────────────────
+
+function buildMenuList() {
+  const list = document.getElementById('menu-list');
+  list.innerHTML = ALL_QUESTIONS.map(q => {
+    const typeIcon = {multi:'☑',single:'○',text:'✎',match:'⇄',order:'↕'}[q.type] || '';
+    const preview = q.q.length > 72 ? q.q.slice(0, 72) + '…' : q.q;
+    return `<button class="menu-item" onclick="openSolo(${q.id})">
+      <span class="menu-item-num">${typeIcon} ${q.id}</span>
+      <span class="menu-item-text">${preview}</span>
+    </button>`;
+  }).join('');
+}
+
+function openMenu() {
+  buildMenuList();
+  document.getElementById('menu-overlay').classList.add('open');
+  document.getElementById('menu-drawer').classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+
+function closeMenu() {
+  document.getElementById('menu-overlay').classList.remove('open');
+  document.getElementById('menu-drawer').classList.remove('open');
+  document.body.style.overflow = '';
+}
+
+// ─── SOLO SCREEN ───────────────────────────────────────────────────────────
+
+let soloAnswered = false;
+let soloQ = null;
+
+function openSolo(qId) {
+  closeMenu();
+  soloQ = ALL_QUESTIONS.find(q => q.id === qId);
+  if (!soloQ) return;
+  soloAnswered = false;
+
+  document.getElementById('solo-topbar-title').textContent = `Вопрос №${soloQ.id}`;
+  document.getElementById('solo-content').innerHTML = buildQuestionHTML(soloQ, 'solo');
+  document.getElementById('solo-screen').classList.add('active');
+  document.body.style.overflow = 'hidden';
+
+  // Push history state so the Android back button works
+  history.pushState({ soloOpen: true, qId }, '', '');
+}
+
+function closeSolo() {
+  document.getElementById('solo-screen').classList.remove('active');
+  document.body.style.overflow = '';
+  // Remove the pushed state if we're closing programmatically
+  if (history.state && history.state.soloOpen) history.back();
+}
+
+// Handle browser/Android back button
+window.addEventListener('popstate', function(e) {
+  const solo = document.getElementById('solo-screen');
+  if (solo.classList.contains('active')) {
+    solo.classList.remove('active');
+    document.body.style.overflow = '';
+  }
+});
+
+// ─── BUILD QUESTION HTML (shared between main quiz and solo) ───────────────
+
+function buildQuestionHTML(q, context) {
+  const typeLabel = {
+    multi:'☑ Несколько правильных ответов',
+    single:'○ Один правильный ответ',
+    text:'✎ Напишите термин по определению',
+    match:'⇄ Установите соответствие',
+    order:'↕ Расставьте по порядку'
+  };
+  const badgeClass = {multi:'badge-multi',single:'badge-single',text:'badge-text',match:'badge-match',order:'badge-order'};
+  const pfx = context; // unique prefix for IDs
+
+  let html = `<div class="card" id="${pfx}-q-card">
+    <div class="q-num">Вопрос №${q.id}</div>
+    <span class="q-badge ${badgeClass[q.type]}">${typeLabel[q.type]}</span>
+    <div class="q-text${q.type==='text' ? ' is-definition' : ''}">${q.type==='text' ? '<span style="display:block;color:var(--muted);font-size:.75rem;font-weight:700;text-transform:uppercase;letter-spacing:.8px;margin-bottom:6px;font-style:normal;">Определение:</span>' : ''}${q.q}</div>
+    ${q.type==='text' ? '<div style="color:var(--muted);font-size:.85rem;margin:-4px 0 16px;">← Введите термин, которому соответствует это определение</div>' : ''}
+    <div id="${pfx}-q-body">`;
+
+  if (q.type === 'single') {
+    const shuffled = shuffle(q.options.map((o,i) => ({text:o,idx:i})));
+    html += `<div class="choices" id="${pfx}-choices">`;
+    shuffled.forEach(o => {
+      html += `<button class="choice-btn" data-idx="${o.idx}" onclick="soloSelectSingle(this,'${pfx}')">${o.text}</button>`;
+    });
+    html += `</div>`;
+  } else if (q.type === 'multi') {
+    const shuffled = shuffle(q.options.map((o,i) => ({text:o,idx:i})));
+    html += `<div class="choices" id="${pfx}-choices">`;
+    shuffled.forEach(o => {
+      html += `<button class="choice-btn" data-idx="${o.idx}" onclick="soloToggleMulti(this,'${pfx}')">${o.text}</button>`;
+    });
+    html += `</div>`;
+  } else if (q.type === 'text') {
+    html += `<textarea class="text-input" id="${pfx}-text-ans" placeholder="Введите термин..." rows="2" style="min-height:54px;resize:none;"></textarea>`;
+  } else if (q.type === 'match') {
+    const shuffledPairs = shuffle(q.pairs.map((p,i) => ({...p, origI:i})));
+    const rights = shuffle(q.pairs.map(p => p.right));
+    html += `<div class="match-grid" id="${pfx}-match-grid">`;
+    shuffledPairs.forEach((p, i) => {
+      html += `<div class="match-row">
+        <div class="match-left">${p.left}</div>
+        <select class="match-right-select" data-correct="${p.right}" id="${pfx}-ms${i}">
+          <option value="">— выберите —</option>
+          ${rights.map(r => `<option value="${r}">${r}</option>`).join('')}
+        </select>
+      </div>`;
+    });
+    html += `</div>`;
+  } else if (q.type === 'order') {
+    const shuffled = shuffle(q.items.map((t,i) => ({text:t, orig:i})));
+    html += `<div class="order-list" id="${pfx}-order-list">`;
+    shuffled.forEach((item, i) => {
+      html += `<div class="order-item" draggable="true" data-orig="${item.orig}" ondragstart="dragStart(event)" ondragover="dragOver(event)" ondragleave="dragLeave(event)" ondrop="dropItemPfx(event,'${pfx}')">
+        <span class="order-handle">⠿</span>
+        <span class="order-num">${i+1}</span>
+        <span>${item.text}</span>
+      </div>`;
+    });
+    html += `</div>`;
+  }
+
+  html += `<div class="feedback" id="${pfx}-feedback"></div>
+    <div class="btn-row">
+      <button class="btn btn-primary" id="${pfx}-check-btn" onclick="soloCheckAnswer('${pfx}')">Проверить</button>
+    </div>
+  </div></div>`;
+
+  return html;
+}
+
+function dropItemPfx(e, pfx) {
+  e.preventDefault();
+  const target = e.currentTarget;
+  target.classList.remove('drag-over');
+  if (dragSrc && dragSrc !== target) {
+    const list = target.parentElement;
+    const items = [...list.children];
+    const si = items.indexOf(dragSrc);
+    const ti = items.indexOf(target);
+    if (si < ti) list.insertBefore(dragSrc, target.nextSibling);
+    else list.insertBefore(dragSrc, target);
+    [...list.children].forEach((el,i) => el.querySelector('.order-num').textContent = i+1);
+  }
+  dragSrc && dragSrc.classList.remove('dragging');
+  dragSrc = null;
+}
+
+function soloSelectSingle(btn, pfx) {
+  if (soloAnswered) return;
+  document.querySelectorAll(`#${pfx}-choices .choice-btn`).forEach(b => b.classList.remove('selected'));
+  btn.classList.add('selected');
+}
+
+function soloToggleMulti(btn, pfx) {
+  if (soloAnswered) return;
+  btn.classList.toggle('selected');
+}
+
+function soloCheckAnswer(pfx) {
+  if (soloAnswered) return;
+  soloAnswered = true;
+  const q = soloQ;
+  let isCorrect = false;
+  const fb = document.getElementById(`${pfx}-feedback`);
+
+  if (q.type === 'single') {
+    const selected = document.querySelector(`#${pfx}-choices .choice-btn.selected`);
+    if (!selected) { soloAnswered = false; fb.textContent = 'Выберите вариант ответа.'; fb.className = 'feedback wrong-fb show'; return; }
+    const idx = parseInt(selected.dataset.idx);
+    isCorrect = idx === q.correct;
+    document.querySelectorAll(`#${pfx}-choices .choice-btn`).forEach(b => {
+      if (parseInt(b.dataset.idx) === q.correct) b.classList.add('reveal-correct');
+      if (b.classList.contains('selected') && !isCorrect) b.classList.add('wrong');
+      if (b.classList.contains('selected') && isCorrect) b.classList.add('correct');
+    });
+  } else if (q.type === 'multi') {
+    const selected = [...document.querySelectorAll(`#${pfx}-choices .choice-btn.selected`)].map(b => parseInt(b.dataset.idx)).sort((a,b)=>a-b);
+    const correct = [...q.correct].sort((a,b)=>a-b);
+    isCorrect = JSON.stringify(selected) === JSON.stringify(correct);
+    document.querySelectorAll(`#${pfx}-choices .choice-btn`).forEach(b => {
+      const idx = parseInt(b.dataset.idx);
+      const isSel = b.classList.contains('selected');
+      const isCorr = q.correct.includes(idx);
+      b.classList.remove('selected');
+      if (isSel && isCorr) b.classList.add('correct');
+      else if (isSel && !isCorr) b.classList.add('wrong');
+      else if (!isSel && isCorr) b.classList.add('reveal-correct');
+    });
+  } else if (q.type === 'text') {
+    const val = document.getElementById(`${pfx}-text-ans`).value.toLowerCase().trim();
+    isCorrect = q.keywords.some(kw => val.includes(kw.toLowerCase()));
+    document.getElementById(`${pfx}-text-ans`).classList.add(isCorrect ? 'correct-input' : 'wrong-input');
+  } else if (q.type === 'match') {
+    let allOk = true;
+    document.querySelectorAll(`#${pfx}-match-grid .match-right-select`).forEach(sel => {
+      const ok = sel.value === sel.dataset.correct;
+      if (!ok) allOk = false;
+      sel.classList.add(ok ? 'correct-match' : 'wrong-match');
+    });
+    isCorrect = allOk;
+  } else if (q.type === 'order') {
+    const list = document.getElementById(`${pfx}-order-list`);
+    const items = [...list.children];
+    const userOrder = items.map(el => parseInt(el.dataset.orig));
+    isCorrect = JSON.stringify(userOrder) === JSON.stringify(q.correct);
+    items.forEach((el, i) => {
+      el.classList.add(userOrder[i] === q.correct[i] ? 'correct-order' : 'wrong-order');
+    });
+  }
+
+  const btn = document.getElementById(`${pfx}-check-btn`);
+  if (isCorrect) {
+    let extra = q.type === 'text' ? ` Термин: <strong style="color:#f0e08a">${q.answer}</strong>.` : '';
+    fb.innerHTML = `✓ Верно!${extra} ${q.explanation || ''}`;
+    fb.className = 'feedback correct-fb show';
+    btn.textContent = 'Ещё раз'; btn.className = 'btn btn-next';
+    btn.onclick = () => { soloAnswered = false; openSolo(q.id); };
+  } else {
+    let ansText = '';
+    if (q.type === 'text') ansText = `<br><strong>Правильный ответ:</strong> <span style="font-size:1.05em;font-weight:700;color:#f0e08a">${q.answer}</span>${q.hint ? `<br><em style="opacity:.8">${q.hint}</em>` : ''}`;
+    fb.innerHTML = `✗ Неверно. ${q.explanation || ''} ${ansText}`;
+    fb.className = 'feedback wrong-fb show';
+    btn.textContent = 'Ещё раз'; btn.className = 'btn btn-skip';
+    btn.onclick = () => { soloAnswered = false; openSolo(q.id); };
+  }
 }
 
 startQuiz();
