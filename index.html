@@ -146,17 +146,42 @@
     color: var(--text);
     font-family: 'Inter', sans-serif;
     font-size: .9rem;
-    padding: 12px 16px;
+    padding: 12px 16px 12px 44px;
     text-align: left;
     cursor: pointer;
     transition: border-color .15s, background .15s, transform .1s;
     line-height: 1.5;
+    position: relative;
+    touch-action: manipulation;
+  }
+  .choice-btn::before {
+    content: '';
+    position: absolute;
+    left: 13px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    border: 2px solid var(--border);
+    background: transparent;
+    transition: border-color .15s, background .15s;
+    flex-shrink: 0;
   }
   .choice-btn:hover { border-color: var(--accent); background: rgba(91,142,240,.1); }
+  .choice-btn:hover::before { border-color: var(--accent); }
+  /* Selected (before check) */
   .choice-btn.selected { border-color: var(--accent); background: rgba(91,142,240,.15); }
-  .choice-btn.correct { border-color: var(--green); background: rgba(52,201,108,.15); }
-  .choice-btn.wrong { border-color: var(--red); background: rgba(240,91,91,.15); }
-  .choice-btn.reveal-correct { border-color: var(--green); background: rgba(52,201,108,.08); }
+  .choice-btn.selected::before { border-color: var(--accent); background: var(--accent); }
+  /* ✓ You selected it AND it's correct */
+  .choice-btn.correct { border-color: var(--green); background: rgba(52,201,108,.18); color: #7fefad; font-weight: 600; }
+  .choice-btn.correct::before { border-color: var(--green); background: var(--green); content: '✓'; color: #0f1117; font-size: 11px; font-weight: 900; display: flex; align-items: center; justify-content: center; line-height: 1; }
+  /* ✗ You selected it BUT it's wrong */
+  .choice-btn.wrong { border-color: var(--red); background: rgba(240,91,91,.18); color: #f08080; }
+  .choice-btn.wrong::before { border-color: var(--red); background: var(--red); content: '✗'; color: #fff; font-size: 11px; font-weight: 900; display: flex; align-items: center; justify-content: center; line-height: 1; }
+  /* ○ You didn't select it but it's correct (missed answer) */
+  .choice-btn.reveal-correct { border-color: var(--green); background: rgba(52,201,108,.07); color: #5edd8e; }
+  .choice-btn.reveal-correct::before { border-color: var(--green); background: transparent; content: '○'; color: var(--green); font-size: 10px; display: flex; align-items: center; justify-content: center; line-height: 1; }
 
   /* TEXT INPUT */
   .text-input {
@@ -179,24 +204,30 @@
 
   /* MATCH */
   .match-grid { display: flex; flex-direction: column; gap: 10px; }
-  .match-row { display: flex; gap: 10px; align-items: center; }
+  .match-row {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
   .match-left {
-    flex: 1;
     background: var(--surface);
     border: 1.5px solid var(--border);
     border-radius: 10px;
     padding: 10px 14px;
     font-size: .85rem;
     line-height: 1.4;
+    width: 100%;
+    box-sizing: border-box;
   }
   .match-right-select {
-    flex: 1;
+    width: 100%;
+    box-sizing: border-box;
     background: var(--surface);
     border: 1.5px solid var(--border);
     border-radius: 10px;
     color: var(--text);
     font-family: 'Inter', sans-serif;
-    font-size: .82rem;
+    font-size: .85rem;
     padding: 10px 14px;
     outline: none;
     cursor: pointer;
@@ -878,7 +909,7 @@ const ALL_QUESTIONS = [
   {
     id:48, type:'order',
     q:'Расставьте в нужной последовательности поколения ГЛОБАЛЬНЫХ беспроводных сетей (по возрастанию от 1G до 4G):',
-    items:['1G — аналоговые сети (AMPS, TACS, NMT)','2G — GPRS, CDMA','2,5G — EDGE, CDMA-450','3G — UMTS/WCDMA, EV-DO','4G — WiMAX, LTE'],
+    items:['Аналоговые сети (AMPS, TACS, NMT)','GPRS, CDMA','EDGE, CDMA-450','UMTS/WCDMA, EV-DO','WiMAX, LTE'],
     correct:[0,1,2,3,4],
     explanation:'Эволюция: 1G (аналоговые) → 2G (GPRS/CDMA) → 2,5G (EDGE) → 3G (UMTS) → 4G (WiMAX/LTE).'
   },
@@ -892,7 +923,7 @@ const ALL_QUESTIONS = [
   {
     id:50, type:'multi',
     q:'Укажите беспроводные технологии, сфера применения которых ограничивается небольшими расстояниями (до 10 м):',
-    options:['Bluetooth','NFC (Near Field Communication)','Transfer Jet','Wireless USB (UWB)','Wi-Fi','WiMAX'],
+    options:['Bluetooth','NFC (Near Field Communication)','Transfer Jet','Wireless USB (UWB)','Wi-Fi','WiMAX','ZigBee (до 10–100 м)','LoRa (до нескольких км)'],
     correct:[0,1,2,3],
     explanation:'До 10 м и меньше: Bluetooth (10 м), NFC (10–20 см), Transfer Jet (несколько см), Wireless USB/UWB (10 м). Wi-Fi и WiMAX — для больших расстояний.'
   },
@@ -1271,7 +1302,11 @@ function selectSingle(btn) {
 
 function toggleMulti(btn) {
   if (answered) return;
+  // Prevent double-fire from touch+click on mobile
+  if (btn._toggling) return;
+  btn._toggling = true;
   btn.classList.toggle('selected');
+  setTimeout(() => { btn._toggling = false; }, 300);
 }
 
 function checkAnswer() {
@@ -1538,7 +1573,10 @@ function soloSelectSingle(btn, pfx) {
 
 function soloToggleMulti(btn, pfx) {
   if (soloAnswered) return;
+  if (btn._toggling) return;
+  btn._toggling = true;
   btn.classList.toggle('selected');
+  setTimeout(() => { btn._toggling = false; }, 300);
 }
 
 function soloCheckAnswer(pfx) {
