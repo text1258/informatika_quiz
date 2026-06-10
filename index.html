@@ -335,7 +335,7 @@ const ALL_QUESTIONS = [
   {
     id:4, type:'multi',
     q:'Авторское право на программу охраняет:',
-    options:['Форму (текст) программы','Аудиовизуальное отображение, порождаемое программой', 'Идеи и принципы, заложенные в программе','Алгоритмы','Принципы организации интерфейса'],
+    options:['Форму (текст) программы','Аудиовизуальное отображение, порождаемое программой','Идеи и принципы, заложенные в программе','Алгоритмы','Принципы организации интерфейса'],
     correct:[0,1],
     explanation:'Авторское право охраняет форму (текст) программы, аудиовизуальное отображение. Идеи, принципы, алгоритмы и принципы организации интерфейса авторским правом НЕ защищаются.'
   },
@@ -1102,8 +1102,12 @@ function checkAnswer() {
     isCorrect = JSON.stringify(selected) === JSON.stringify(correct);
     document.querySelectorAll('#choices .choice-btn').forEach(b => {
       const idx = parseInt(b.dataset.idx);
-      if (q.correct.includes(idx)) b.classList.add('reveal-correct');
-      if (b.classList.contains('selected') && !q.correct.includes(idx)) b.classList.add('wrong');
+      const isSelected = b.classList.contains('selected');
+      const isCorrectOption = q.correct.includes(idx);
+      b.classList.remove('selected');
+      if (isSelected && isCorrectOption) b.classList.add('correct');
+      else if (isSelected && !isCorrectOption) b.classList.add('wrong');
+      else if (!isSelected && isCorrectOption) b.classList.add('reveal-correct');
     });
 
   } else if (q.type === 'text') {
